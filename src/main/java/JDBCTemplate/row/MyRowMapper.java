@@ -211,7 +211,6 @@ public class MyRowMapper<T> implements RowMapper<T> {
             ((ColumnMapping) mappedObject).mappingColumn(rs);
             return mappedObject;
         }
-
         BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(mappedObject);
         initBeanWrapper(bw);
 

@@ -1,5 +1,6 @@
 import JDBCTemplate.JDBCTemplateUtils;
 import model.TTest;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -47,14 +48,31 @@ public class test {
         System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:" + i);
     }
 
+    public static void findRowSet() {
+        System.out.println("★★★★★★★★★★★★★★★★★★★★★findRowSet★★★★★★★★★★★★★★★★★★★★★★★★");
+        String sql = " select\n" +
+                "      id\n" +
+                "      ,username,name,sex,status,created,time,test_id,love_name\n" +
+                "      from t_test\n" +
+                "      where\n" +
+                "      id <= ?";
+        Long start = System.currentTimeMillis();
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, "2");
+        Long end = System.currentTimeMillis();
+        System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:" + sqlRowSet.getString(1));
+    }
+
+
     public static void findMap() {
         System.out.println("★★★★★★★★★★★★★★★★★★★★★findMap★★★★★★★★★★★★★★★★★★★★★★★★");
-        TTest t = new TTest();
-        t.setId(2);
+        Map map = new LinkedHashMap();
+        map.put("id", 2);
+        map.put("age", 18);
+        map.put("ggg", "sssssss");
         Long start = System.currentTimeMillis();
-        Map<String, Object> map = jdbcTemplate.executeQueryMap("test.selectByPrimaryKey", t);
+        Map<String, Object> maps = jdbcTemplate.executeQueryMap("test.selectByPrimaryKey", map);
         Long end = System.currentTimeMillis();
-        System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:");
+        System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:" + maps);
     }
 
     public static void findObject() {
@@ -100,6 +118,9 @@ public class test {
     }
 
     public static void main(String[] args) {
+        findMap();
+//        findObject();
+        //    findRowSet();
 //        findBigList();
 //        for (int i = 0; i < 10; i++) {
 //            System.out.println(" 执行第 [" + (i + 1) + "]");
@@ -107,8 +128,7 @@ public class test {
 //            findListObject();
 //            findListMap();
 //        }
-//        findMap();
-        findObject();
+
 //        insert();
 //        update();
     }

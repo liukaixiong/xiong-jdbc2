@@ -6,6 +6,7 @@ import JDBCTemplate.row.MyRowMapper;
 import com.alibaba.druid.pool.DruidDataSource;
 import model.JDBCParamsModel;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -42,6 +43,7 @@ public class JDBCTemplateUtils extends JdbcTemplate {
         druidDataSource.setUrl("jdbc:mysql://localhost/xiong?characterEncoding=UTF-8");
         druidDataSource.setUsername("root");
         druidDataSource.setPassword("1234");
+        setFetchSize(1000);
         setDataSource(druidDataSource);
     }
 
@@ -185,6 +187,14 @@ public class JDBCTemplateUtils extends JdbcTemplate {
         return map;
     }
 
+    public <T> T queryForObject(String sql, Object[] args, RowMapper<T> rowMapper) throws DataAccessException {
+        List<T> results = query(sql, args, new RowMapperResultSetExtractor<T>(rowMapper, 1));
+        if (results.size() == 0) {
+            return null;
+        }
+        return DataAccessUtils.requiredSingleResult(results);
+    }
+
     public int executeUpdate(String sqlid, Object o) {
         JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
         int update = update(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects());
@@ -195,7 +205,7 @@ public class JDBCTemplateUtils extends JdbcTemplate {
         SqlParameterSource sqlParameterSource = getSqlParameterSource(o);
         String sql = SqlKit.sql(sqlid);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
-        int update = getNamedParameterJdbcTemplate().update(sql, sqlParameterSource,keyHolder);
+        int update = getNamedParameterJdbcTemplate().update(sql, sqlParameterSource, keyHolder);
         int i = keyHolder.getKey().intValue();
         return i;
     }
@@ -262,12 +272,14 @@ public class JDBCTemplateUtils extends JdbcTemplate {
         logger.debug("Executing prepared SQL query");
         return execute(psc, new PreparedStatementCallback<T>() {
             public T doInPreparedStatement(PreparedStatement ps) throws SQLException {
+                Long queryStart = System.currentTimeMillis();
                 ResultSet rs = null;
                 try {
                     if (pss != null) {
                         pss.setValues(ps);
                     }
-                    ps.setFetchSize(Integer.MIN_VALUE);
+                    // TODO rowset查询的情况下会报错
+                    ps.setFetchSize(getFetchSize());
                     Long s = System.currentTimeMillis();
                     rs = ps.executeQuery();
                     logger.debug(" [[[[[[[[[[[[ 查询耗时 : " + (System.currentTimeMillis() - s) + " ]]]]]]]]");
@@ -283,7 +295,12 @@ public class JDBCTemplateUtils extends JdbcTemplate {
                     if (pss instanceof ParameterDisposer) {
                         ((ParameterDisposer) pss).cleanupParameters();
                     }
+                    Long queryEnd = System.currentTimeMillis();
+                    Long countTime = queryEnd - queryStart;
+                    logger.debug(" ★★★★★★★★★★查询总耗时 [" + countTime + "] ★★★★★★★★★★★★");
                 }
+
+
             }
         });
     }
