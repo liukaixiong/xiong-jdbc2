@@ -35,7 +35,9 @@ import java.util.*;
  * @since 2.0
  */
 public abstract class NamedParameterUtils2 {
-
+    /**
+     * Logger available to subclasses
+     */
     /**
      * Set of characters that qualify as parameter separators,
      * indicating that a parameter name in a SQL String has ended.
@@ -336,6 +338,48 @@ public abstract class NamedParameterUtils2 {
         return i;
     }
 
+//    private static String replaceDynamicStr(String sql){
+//        int indexNo = sql.indexOf("$");
+//        int kg = sql.indexOf("\r", indexNo);
+//        int hh = sql.indexOf("\n",indexNo);
+//
+//    }
+
+
+    public static String replaceDynamic(String sql, SqlParameterSource mapSqlParameterSource) {
+        int indexNo = sql.indexOf("$");
+        if (indexNo > 0) {
+            int index = 0;
+            for (int i = indexNo; i < sql.length(); i++) {
+                indexNo = sql.indexOf("$", index + 1);
+                if (indexNo < 0) {
+                    break;
+                }
+                int kg = sql.indexOf("\r", indexNo - 1);
+                int hh = sql.indexOf(" ", indexNo);
+                String table = "";
+                if (kg > hh) {
+                    table = sql.substring(indexNo + 1, kg);
+                } else if (hh > kg) {
+                    table = sql.substring(indexNo + 1, hh);
+                } else {
+                    table = sql.substring(indexNo + 1, sql.length());
+                    indexNo = sql.length();
+                }
+                index = indexNo;
+                Object value = null;
+                try {
+                    value = mapSqlParameterSource.getValue(table.trim());
+                } catch (Exception e) {
+                    System.err.println(" !!!!!!!!动态参数为必填项 : $"+table.trim()+" 必须为它赋值 .!!!!!!!!!!!!!");
+                    e.printStackTrace();
+                }
+                sql = sql.replace("$" + table.trim(), value.toString());
+            }
+        }
+        return sql;
+    }
+
     /**
      * 检查sql第一个参数为null的情况下,进行sql校验
      *
@@ -346,6 +390,8 @@ public abstract class NamedParameterUtils2 {
      * @return
      */
     public static String validCheckSql(String sql, String s, ParsedSql2 parsedSql, SqlParameterSource mapSqlParameterSource) {
+
+
         if (parsedSql.getParameterNames().size() > 0) {
             // 如果是update的情况下
             String s1 = parsedSql.getParameterNames().get(0);
@@ -400,13 +446,17 @@ public abstract class NamedParameterUtils2 {
                 Object value = paramSource.getValue(paramName);
                 if (value == null) {
                     continue;
-                } else if (value instanceof Collection) {
+                }
+                // 如果是集合的情况 类似于批量添加的时候
+                else if (value instanceof Collection) {
                     Iterator<?> entryIter = ((Collection<?>) value).iterator();
                     while (entryIter.hasNext()) {
                         Object entryItem = entryIter.next();
                         dataList.add(entryItem);
                     }
-                } else if (value instanceof Object[]) {
+                }
+                // 如果是数组的情况 类似与 in (1,2,3)的时候
+                else if (value instanceof Object[]) {
                     for (int j = 0; j < ((Object[]) value).length; j++) {
                         dataList.add(((Object[]) value)[j]);
                     }

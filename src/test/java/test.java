@@ -2,10 +2,7 @@ import JDBCTemplate.JDBCTemplateUtils;
 import model.TTest;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Liukx
@@ -34,7 +31,7 @@ public class test {
     public static void update() {
         System.out.println("★★★★★★★★★★★★★★★★★★★★★update★★★★★★★★★★★★★★★★★★★★★★★★");
         TTest t = new TTest();
-        t.setUsername("添加数据");
+       // t.setUsername("添加数据");
         t.setLove_name("mmm");
         t.setName("你知道?");
         t.setSex("男");
@@ -73,6 +70,25 @@ public class test {
         Map<String, Object> maps = jdbcTemplate.executeQueryMap("test.selectByPrimaryKey", map);
         Long end = System.currentTimeMillis();
         System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:" + maps);
+    }
+
+    public static void findSqlOjbect() {
+        System.out.println("★★★★★★★★★★★★★★★★★★★★★findSqlOjbect★★★★★★★★★★★★★★★★★★★★★★★★");
+        Object[] ids = new Object[3];
+        ids[0] = "2";
+        ids[1] = "3307424";
+        ids[2] = "3307426";
+
+        Map params = new HashMap();
+        params.put("username", "添加%");
+        params.put("table", "t_test");
+        params.put("id", ids);
+        //params.put("minId", "3307423");
+        //params.put("maxId", "3307426");
+        Long start = System.currentTimeMillis();
+        List<TTest> tTests = jdbcTemplate.executeQueryList("test.operationSql", params, TTest.class);
+        Long end = System.currentTimeMillis();
+        System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:" + tTests.size());
     }
 
     public static void findObject() {
@@ -117,8 +133,15 @@ public class test {
         System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:" + tTests.size());
     }
 
+    public static void p(String s) {
+        s = "22222";
+    }
+
+
     public static void main(String[] args) {
-        findMap();
+        findSqlOjbect();
+//        update();
+//        findMap();
 //        findObject();
         //    findRowSet();
 //        findBigList();
@@ -132,4 +155,6 @@ public class test {
 //        insert();
 //        update();
     }
+
+
 }

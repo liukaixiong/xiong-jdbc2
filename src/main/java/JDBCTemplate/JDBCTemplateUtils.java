@@ -14,24 +14,26 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.JdbcUtils;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.util.Assert;
 import sql.config.SqlKit;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * jdbc管理类
+ * jdbcTemplate拓展类
  *
  * @author Liukx
  * @create 2017-03-13 19:53
  * @email liukx@elab-plus.com
  **/
 public class JDBCTemplateUtils extends JdbcTemplate {
+
 
     {
         init();
@@ -103,7 +105,7 @@ public class JDBCTemplateUtils extends JdbcTemplate {
      *
      * @param sql         sql语句
      * @param obj         参数对象
-     * @param elementType
+     * @param elementType 对象类型
      * @param <T>
      * @return
      */
@@ -174,6 +176,15 @@ public class JDBCTemplateUtils extends JdbcTemplate {
         return ts;
     }
 
+    /**
+     * 查询单个对象
+     *
+     * @param sqlid       配置文件对应的组+id
+     * @param o           默认可以传 Map、Model
+     * @param elementType 出参类型指定
+     * @param <T>
+     * @return
+     */
     public <T> T executeQueryObject(String sqlid, Object o, Class<T> elementType) {
         JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
         RowMapper<T> rm = BeanPropertyRowMapper.newInstance(elementType);
@@ -181,12 +192,29 @@ public class JDBCTemplateUtils extends JdbcTemplate {
         return ts;
     }
 
+    /**
+     * 查询返回一个Map对象
+     *
+     * @param sqlid
+     * @param o
+     * @return
+     */
     public Map<String, Object> executeQueryMap(String sqlid, Object o) {
         JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
         Map<String, Object> map = queryForMap(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects());
         return map;
     }
 
+    /**
+     * 查询一个对象
+     *
+     * @param sql       sql文件中的(组.id)
+     * @param args      参数 默认类型为 Map 和 Model
+     * @param rowMapper 返回出参类型
+     * @param <T>
+     * @return
+     * @throws DataAccessException
+     */
     public <T> T queryForObject(String sql, Object[] args, RowMapper<T> rowMapper) throws DataAccessException {
         List<T> results = query(sql, args, new RowMapperResultSetExtractor<T>(rowMapper, 1));
         if (results.size() == 0) {
@@ -195,12 +223,26 @@ public class JDBCTemplateUtils extends JdbcTemplate {
         return DataAccessUtils.requiredSingleResult(results);
     }
 
+    /**
+     * 执行修改操作
+     *
+     * @param sqlid 配置文件对应 组和id
+     * @param o     入参对象 Map、Model
+     * @return
+     */
     public int executeUpdate(String sqlid, Object o) {
         JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
         int update = update(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects());
         return update;
     }
 
+    /**
+     * 执行添加操作
+     *
+     * @param sqlid 配置文件对象 组和id
+     * @param o     入参对象
+     * @return
+     */
     public int executeInsert(String sqlid, Object o) {
         SqlParameterSource sqlParameterSource = getSqlParameterSource(o);
         String sql = SqlKit.sql(sqlid);
@@ -239,32 +281,37 @@ public class JDBCTemplateUtils extends JdbcTemplate {
         ParsedSql2 parsedSql = getParsedSql2(sql);
         // 获取有效的参数
         Object[] data = NamedParameterUtils2.buildValueArray(parsedSql, sqlParameterSource, null);
+        // 正常解析sql为jdbc与参数对应
         String s = NamedParameterUtils2.substituteNamedParameters(parsedSql, sqlParameterSource);
-        String s1 = NamedParameterUtils2.validCheckSql(sql, s, parsedSql, sqlParameterSource);
-        logger.debug(" 转换后的sql - " + s1);
+        // 校验第一个参数为空的情况下
+        s = NamedParameterUtils2.validCheckSql(sql, s, parsedSql, sqlParameterSource);
+        // 替换动态表名存在的情况下
+        s = NamedParameterUtils2.replaceDynamic(s, sqlParameterSource);
+
+        logger.debug(" 转换后的sql - " + s);
         logger.debug(" 对应参数    -  " + Arrays.toString(data));
         JDBCParamsModel model = new JDBCParamsModel();
-        model.setSql(s1);
+        model.setSql(s);
         model.setObjects(data);
         return model;
     }
 
 
-    public Long insertAndGetKey(final String sql, final Object[] object) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        update(new PreparedStatementCreator() {
-            public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
-                PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                for (int i = 0; i < object.length; i++) {
-                    int index = i + 1;
-                    ps.setObject(index, object[i]);
-                }
-                return ps;
-            }
-        }, keyHolder);
-        Long generatedId = keyHolder.getKey().longValue();
-        return generatedId;
-    }
+//    public Long insertAndGetKey(final String sql, final Object[] object) {
+//        KeyHolder keyHolder = new GeneratedKeyHolder();
+//        update(new PreparedStatementCreator() {
+//            public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+//                PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+//                for (int i = 0; i < object.length; i++) {
+//                    int index = i + 1;
+//                    ps.setObject(index, object[i]);
+//                }
+//                return ps;
+//            }
+//        }, keyHolder);
+//        Long generatedId = keyHolder.getKey().longValue();
+//        return generatedId;
+//    }
 
     public <T> T query(PreparedStatementCreator psc, final PreparedStatementSetter pss, final ResultSetExtractor<T> rse)
             throws DataAccessException {
