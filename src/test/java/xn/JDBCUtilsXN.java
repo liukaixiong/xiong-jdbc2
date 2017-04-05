@@ -80,7 +80,7 @@ public class JDBCUtilsXN {
             TTest test = new TTest();
             test.setStatus("1");
             Long start = System.currentTimeMillis();
-            List<Map<String, Object>> maps = jdbcTemplateUtils.excuteQueryforListMap("test.selectByExample", test);
+            List<Map<String, Object>> maps = jdbcTemplateUtils.executeQueryforListMap("test.selectByExample", test);
             Long end = System.currentTimeMillis();
             Long time = end - start;
             System.out.println(" 查询结果大小 : " + maps.size() + "\t  一共耗时: " + time);

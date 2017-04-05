@@ -155,7 +155,7 @@ public class JDBCTemplateUtils extends JdbcTemplate {
      * @param o
      * @return
      */
-    public List<Map<String, Object>> excuteQueryforListMap(String sqlid, Object o) {
+    public List<Map<String, Object>> executeQueryforListMap(String sqlid, Object o) {
         JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
         List<Map<String, Object>> maps = queryForList(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects());
         return maps;

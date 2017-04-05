@@ -1,5 +1,6 @@
 import JDBCTemplate.JDBCTemplateUtils;
 import model.TTest;
+import model.TTest1;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import java.util.*;
@@ -31,7 +32,7 @@ public class test {
     public static void update() {
         System.out.println("★★★★★★★★★★★★★★★★★★★★★update★★★★★★★★★★★★★★★★★★★★★★★★");
         TTest t = new TTest();
-       // t.setUsername("添加数据");
+        // t.setUsername("添加数据");
         t.setLove_name("mmm");
         t.setName("你知道?");
         t.setSex("男");
@@ -80,7 +81,7 @@ public class test {
         ids[2] = "3307426";
 
         Map params = new HashMap();
-        params.put("username", "添加%");
+//        params.put("username", "添加%");
         params.put("table", "t_test");
         params.put("id", ids);
         //params.put("minId", "3307423");
@@ -108,7 +109,7 @@ public class test {
         TTest t = new TTest();
         t.setStatus("1");
         Long start = System.currentTimeMillis();
-        List<Map<String, Object>> list = jdbcTemplate.excuteQueryforListMap("test.selectByExample", t);
+        List<Map<String, Object>> list = jdbcTemplate.executeQueryforListMap("test.selectByExample", t);
         Long end = System.currentTimeMillis();
         System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:" + list.size());
     }
@@ -126,9 +127,21 @@ public class test {
     public static void findBigList() {
         System.out.println("★★★★★★★★★★★★★★★★★★★★★findBigList★★★★★★★★★★★★★★★★★★★★★★★★");
         TTest t = new TTest();
-        t.setStatus("1");
+        t.setId(2);
+        t.setStatus("10");
         Long start = System.currentTimeMillis();
         List<TTest> tTests = jdbcTemplate.executeQueryBigDataList("test.selectByExample", t, TTest.class);
+        Long end = System.currentTimeMillis();
+        System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:" + tTests.size());
+    }
+
+    public static void findAnnotationBigList() {
+        System.out.println("★★★★★★★★★★★★★★★★★★★★★findBigList★★★★★★★★★★★★★★★★★★★★★★★★");
+        TTest t = new TTest();
+        t.setId(2);
+        t.setStatus("10");
+        Long start = System.currentTimeMillis();
+        List<TTest1> tTests = jdbcTemplate.executeQueryBigDataList("test.selectByExample", t, TTest1.class);
         Long end = System.currentTimeMillis();
         System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:" + tTests.size());
     }
@@ -139,7 +152,7 @@ public class test {
 
 
     public static void main(String[] args) {
-        findSqlOjbect();
+//        findSqlOjbect();
 //        update();
 //        findMap();
 //        findObject();
@@ -147,7 +160,9 @@ public class test {
 //        findBigList();
 //        for (int i = 0; i < 10; i++) {
 //            System.out.println(" 执行第 [" + (i + 1) + "]");
-//            findBigList();
+        //TODO 测试注解 赋值的时候做测试,将Test.class的接口类去掉 做测试.!
+        findAnnotationBigList();
+//        findBigList();
 //            findListObject();
 //            findListMap();
 //        }

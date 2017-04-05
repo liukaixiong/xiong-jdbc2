@@ -1,5 +1,6 @@
 package JDBCTemplate.row;
 
+import annt.Column;
 import mapping.ColumnMapping;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -12,6 +13,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -120,14 +122,27 @@ public class MyRowMapper<T> implements RowMapper<T> {
         PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(mappedClass);
         for (PropertyDescriptor pd : pds) {
             if (pd.getWriteMethod() != null) {
-                this.mappedFields.put(pd.getName().toLowerCase(), pd);
+                String name = pd.getName().toLowerCase();
+                try {
+                    Field declaredField = mappedClass.getDeclaredField(pd.getName());
+                    if (declaredField.getAnnotation(Column.class) != null) {
+                        name = declaredField.getAnnotation(Column.class).name();
+                        this.mappedFields.put(name, pd);
+                    } else {
+                        this.mappedFields.put(name, pd);
+                    }
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                }
+
                 String underscoredName = underscoreName(pd.getName());
                 if (!pd.getName().toLowerCase().equals(underscoredName)) {
                     this.mappedFields.put(underscoredName, pd);
                 }
-                this.mappedProperties.add(pd.getName());
+                this.mappedProperties.add(name);
             }
         }
+        System.out.println("复制完毕..." + this.mappedFields.toString());
     }
 
     /**
@@ -253,6 +268,20 @@ public class MyRowMapper<T> implements RowMapper<T> {
      * @param bw the BeanWrapper to initialize
      */
     protected void initBeanWrapper(BeanWrapper bw) {
+//        this.mappedClass = mappedClass;
+//        this.mappedFields = new HashMap<String, PropertyDescriptor>();
+//        this.mappedProperties = new HashSet<String>();
+//        PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(mappedClass);
+//        for (PropertyDescriptor pd : pds) {
+//            if (pd.getWriteMethod() != null) {
+//                this.mappedFields.put(pd.getName().toLowerCase(), pd);
+//                String underscoredName = underscoreName(pd.getName());
+//                if (!pd.getName().toLowerCase().equals(underscoredName)) {
+//                    this.mappedFields.put(underscoredName, pd);
+//                }
+//                this.mappedProperties.add(pd.getName());
+//            }
+//        }
     }
 
     /**
