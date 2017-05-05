@@ -1,64 +1,64 @@
 package model;
 
-import annt.Column;
 import mapping.ColumnMapping;
 
-import javax.persistence.Table;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 
-@Table(name ="t_test")
+//import javax.persistence.Table;
+
+//@Table(name ="t_test")
 public class TTest implements ColumnMapping {
     //
     // 表字段 : t_test.id
-    @javax.persistence.Column(name="ids")
+//    @javax.persistence.Column(name="ids")
     private Integer id;
 
     //
     // 表字段 : t_test.username
-    @javax.persistence.Column(name="usernamess")
+//    @javax.persistence.Column(name="usernamess")
     private String username;
 
     //
     // 表字段 : t_test.name
-    @javax.persistence.Column(name="names")
+//    @javax.persistence.Column(name="names")
     private String name;
 
     //
     // 表字段 : t_test.sex
-    @javax.persistence.Column(name="sex1")
+//    @javax.persistence.Column(name="sex1")
     private String sex;
 
     //
     // 表字段 : t_test.status
-    @javax.persistence.Column(name="status1")
+//    @javax.persistence.Column(name="status1")
     private String status;
 
     //
     // 表字段 : t_test.time
-    @javax.persistence.Column(name="time1")
+//    @javax.persistence.Column(name="time1")
     private Date time;
 
     //
     // 表字段 : t_test.created
-    @javax.persistence.Column(name="created1")
+//    @javax.persistence.Column(name="created1")
     private Date created;
 
     //
     // 表字段 : t_test.test_id
-    @javax.persistence.Column(name="test_id1")
+//    @javax.persistence.Column(name="test_id1")
     private String test_id;
 
     //
     // 表字段 : t_test.love_name
-    @javax.persistence.Column(name="love_name1")
+//    @javax.persistence.Column(name="love_name1")
     private String love_name;
 
-    @Column(name = "girlName")
+//    @Column(name = "girlName")
     private String girl_name;
 
-    @javax.persistence.Column(name="girlStatus1")
+//    @javax.persistence.Column(name="girlStatus1")
     private String girlStatus;
 
     public String getGirl_name() {
@@ -93,7 +93,7 @@ public class TTest implements ColumnMapping {
      *
      * @mbggenerated
      */
-    @javax.persistence.Column(name="ids")
+//    @javax.persistence.Column(name="ids")
     public void setId(Integer id) {
         this.id = id;
     }

@@ -1,12 +1,11 @@
 package model;
 
-import annt.Column;
+import anno.Column;
 
-import javax.persistence.Table;
 import java.sql.SQLException;
 import java.util.Date;
 //implements ColumnMapping
-@Table(name ="t_test")
+//@Table(name ="t_test")
 public class TTest1 {
     //
     // 表字段 : t_test.id

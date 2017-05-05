@@ -12,21 +12,21 @@
         ,username,name,sex,status,created,time,test_id,love_name
         from t_test
         where
-        id = :id and
-        <!--and username = :username-->
-        <!--and name = :name-->
-        <!--and sex = :sex-->
-        <!--and -->
-        status = :status
-        <!--and created = :created-->
-        <!--and time = :time-->
-        <!--and test_id = :test_id-->
-        <!--and love_name = :love_name-->
+        id > :id and
+        and username = :username
+        and name = :name
+        and sex = :sex
+        and status = :status
+        and created = :created
+        and time = :time
+        and test_id = :test_id
+        and love_name = :love_name
     </sql>
     <sql id="deleteByKey">
         delete from t_test
         where id = :id
     </sql>
+    <!-- 添加 -->
     <sql id="insert">
         insert into t_test (username, name, sex, status, created, time, test_id, love_name)
         values (:username, :name, :sex, :status, :created, :time, :test_id, :love_name)
@@ -39,12 +39,11 @@
         where
         id = :id
     </sql>
+    <!-- 动态替换表名 -->
     <sql id="operationSql">
-
         select
         a.id,a.username,a.name,a.sex,a.status,a.created,a.time,a.test_id,a.love_name
         from $table a
         where a.username like :username and id in :id
-        <!--and (a.id  &gt;= :minId or a.id &lt;= :maxId)-->
     </sql>
 </sqlGroup>

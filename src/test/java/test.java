@@ -127,8 +127,8 @@ public class test {
     public static void findBigList() {
         System.out.println("★★★★★★★★★★★★★★★★★★★★★findBigList★★★★★★★★★★★★★★★★★★★★★★★★");
         TTest t = new TTest();
-        t.setId(2);
-        t.setStatus("10");
+        t.setId(2900000);
+//        t.setStatus("10");
         Long start = System.currentTimeMillis();
         List<TTest> tTests = jdbcTemplate.executeQueryBigDataList("test.selectByExample", t, TTest.class);
         Long end = System.currentTimeMillis();
@@ -156,12 +156,12 @@ public class test {
 //        update();
 //        findMap();
 //        findObject();
-        //    findRowSet();
-//        findBigList();
+//        findRowSet();
+        findBigList();
 //        for (int i = 0; i < 10; i++) {
 //            System.out.println(" 执行第 [" + (i + 1) + "]");
         //TODO 测试注解 赋值的时候做测试,将Test.class的接口类去掉 做测试.!
-        findAnnotationBigList();
+//        findAnnotationBigList();
 //        findBigList();
 //            findListObject();
 //            findListMap();

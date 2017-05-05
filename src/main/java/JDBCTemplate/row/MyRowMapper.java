@@ -1,6 +1,6 @@
 package JDBCTemplate.row;
 
-import annt.Column;
+import anno.Column;
 import mapping.ColumnMapping;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

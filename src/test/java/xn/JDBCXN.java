@@ -255,13 +255,13 @@ public class JDBCXN {
 //            System.out.println(" 测试第 ["+i+"] 次..");
 //            xn.queryForListMap();
 //        }
-//        for (int i = 0; i < 11; i++) {
-//            System.out.println(" 测试 第 [" + i + "]次");
-//            xn.queryForListObject();
-//        }
+        for (int i = 0; i < 1; i++) {
+            System.out.println(" 测试 第 [" + i + "]次");
+            xn.queryForListObject();
+        }
 
         // 反射对比
-        xn.fansheduibi();
+//        xn.fansheduibi();
 
 
     }
