@@ -1,7 +1,7 @@
 package xn;
 
-import JDBCTemplate.JDBCTemplateUtils;
-import model.TTest;
+import com.x.jdbc.template.JDBCTemplateSupport;
+import com.x.jdbc.model.TTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
@@ -16,10 +16,10 @@ import java.util.Map;
  * @email liukx@elab-plus.com
  **/
 public class JDBCUtilsXN {
-    JDBCTemplateUtils jdbcTemplateUtils = new JDBCTemplateUtils();
+    JDBCTemplateSupport jdbcTemplateUtils = new JDBCTemplateSupport();
 
     public JdbcTemplate getJdbcTemplate() {
-        JdbcTemplate jdbcTemplate = new JDBCTemplateUtils();
+        JdbcTemplate jdbcTemplate = new JDBCTemplateSupport();
         return jdbcTemplate;
     }
 

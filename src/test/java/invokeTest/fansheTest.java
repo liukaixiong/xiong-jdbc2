@@ -1,7 +1,7 @@
 package invokeTest;
 
 import com.esotericsoftware.reflectasm.MethodAccess;
-import model.TTest;
+import com.x.jdbc.model.TTest;
 
 import java.lang.reflect.Method;
 

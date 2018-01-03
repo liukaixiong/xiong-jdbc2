@@ -1,7 +1,7 @@
 package common;
 
-import JDBCTemplate.JDBCTemplateUtils;
-import model.TTest;
+import com.x.jdbc.template.JDBCTemplateSupport;
+import com.x.jdbc.model.TTest;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -17,7 +17,7 @@ import java.util.List;
  * @email liukx@elab-plus.com
  **/
 public class JdbcDataSource {
-    static DataSource dataSource = new JDBCTemplateUtils().getDataSource();
+    static DataSource dataSource = new JDBCTemplateSupport().getDataSource();
 
     public static void mxCheckJDBC() {
         String sql = " select\n" +
@@ -60,7 +60,7 @@ public class JdbcDataSource {
             while (rs.next()) {
                 TTest t = new TTest();
                 t.setUsername(rs.getString(2));
-                t.setId(rs.getInt(1));
+//                t.setId(rs.getInt(1));
                 t.setName(rs.getString(3));
                 t.setSex(rs.getString(4));
                 t.setStatus(rs.getString(5));

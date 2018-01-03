@@ -1,17 +1,19 @@
-package ObjectDuibi;
+package com.x.jdbc.template.row;
 
+import com.x.jdbc.anno.Column;
 import com.x.jdbc.mapping.ColumnMapping;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.*;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.JdbcUtils;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -21,13 +23,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 自己手动添加set进去值
+ * JDBCTemplate原始反射加上手动set方法混合使用方式
  *
  * @author Liukx
  * @create 2017-03-17 17:23
  * @email liukx@elab-plus.com
  **/
-public class RowMapper6<T> implements RowMapper<T> {
+public class MyRowMapper<T> implements RowMapper<T> {
 
     /**
      * Logger available to subclasses
@@ -38,16 +40,6 @@ public class RowMapper6<T> implements RowMapper<T> {
      * The class we are mapping to
      */
     private Class<T> mappedClass;
-
-    /**
-     * Whether we're strictly validating
-     */
-    private boolean checkFullyPopulated = false;
-
-    /**
-     * Whether we're defaulting primitives when mapping a null value
-     */
-    private boolean primitivesDefaultedForNullValue = false;
 
     /**
      * Map of the fields we provide mapping for
@@ -61,38 +53,13 @@ public class RowMapper6<T> implements RowMapper<T> {
 
 
     /**
-     * Create a new BeanPropertyRowMapper for bean-style configuration.
-     *
-     * @see #setMappedClass
-     * @see #setCheckFullyPopulated
-     */
-    public RowMapper6() {
-    }
-
-    /**
-     * Create a new BeanPropertyRowMapper, accepting unpopulated properties
-     * in the target bean.
-     * <p>Consider using the {@link #newInstance} factory method instead,
-     * which allows for specifying the mapped type once only.
+     * 构建一个新的列映射
      *
      * @param mappedClass the class that each row should be mapped to
      */
-    public RowMapper6(Class<T> mappedClass) {
+    public MyRowMapper(Class<T> mappedClass) {
         initialize(mappedClass);
     }
-
-    /**
-     * Create a new BeanPropertyRowMapper.
-     *
-     * @param mappedClass         the class that each row should be mapped to
-     * @param checkFullyPopulated whether we're strictly validating that
-     *                            all bean properties have been mapped from corresponding database fields
-     */
-    public RowMapper6(Class<T> mappedClass, boolean checkFullyPopulated) {
-        initialize(mappedClass);
-        this.checkFullyPopulated = checkFullyPopulated;
-    }
-
 
     /**
      * Set the class that each row should be mapped to.
@@ -109,7 +76,7 @@ public class RowMapper6<T> implements RowMapper<T> {
     }
 
     /**
-     * Initialize the mapping metadata for the given class.
+     * 初始化该类的类信息
      *
      * @param mappedClass the mapped class.
      */
@@ -120,22 +87,41 @@ public class RowMapper6<T> implements RowMapper<T> {
         PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(mappedClass);
         for (PropertyDescriptor pd : pds) {
             if (pd.getWriteMethod() != null) {
-                this.mappedFields.put(pd.getName().toLowerCase(), pd);
+                String name = pd.getName().toLowerCase();
+                try {
+                    Field declaredField = mappedClass.getDeclaredField(pd.getName());
+                    // 判断该注解是否存在
+                    if (declaredField.getAnnotation(Column.class) != null) {
+                        name = declaredField.getAnnotation(Column.class).name();
+                        // 将该注解绑定的name存放到map中
+                        this.mappedFields.put(name, pd);
+                    } else {
+                        //将字段中的名称绑定到map中
+                        this.mappedFields.put(name, pd);
+                    }
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                }
+
+                // 将驼峰的命名也备份到里面,切记,优先级是 Column -> 驼峰 -> 数据库字段名称
                 String underscoredName = underscoreName(pd.getName());
                 if (!pd.getName().toLowerCase().equals(underscoredName)) {
                     this.mappedFields.put(underscoredName, pd);
                 }
-                this.mappedProperties.add(pd.getName());
+                this.mappedProperties.add(name);
             }
         }
+//        System.out.println("复制完毕..." + this.mappedFields.toString());
     }
 
     /**
-     * Convert a name in camelCase to an underscored name in lower case.
-     * Any upper case letters are converted to lower case with a preceding underscore.
+     * 驼峰命名查询
+     * <p>
+     * 如果数据库查询到的是 user_name字段, 则对应到的Model中的是userName
+     * </p>
      *
-     * @param name the string containing original name
-     * @return the converted name
+     * @param name
+     * @return
      */
     private String underscoreName(String name) {
         if (!StringUtils.hasLength(name)) {
@@ -163,57 +149,44 @@ public class RowMapper6<T> implements RowMapper<T> {
     }
 
     /**
-     * Set whether we're strictly validating that all bean properties have been
-     * mapped from corresponding database fields.
-     * <p>Default is {@code false}, accepting unpopulated properties in the
-     * target bean.
-     */
-    public void setCheckFullyPopulated(boolean checkFullyPopulated) {
-        this.checkFullyPopulated = checkFullyPopulated;
-    }
-
-    /**
-     * Return whether we're strictly validating that all bean properties have been
-     * mapped from corresponding database fields.
-     */
-    public boolean isCheckFullyPopulated() {
-        return this.checkFullyPopulated;
-    }
-
-    /**
-     * Set whether we're defaulting Java primitives in the case of mapping a null value
-     * from corresponding database fields.
-     * <p>Default is {@code false}, throwing an exception when nulls are mapped to Java primitives.
-     */
-    public void setPrimitivesDefaultedForNullValue(boolean primitivesDefaultedForNullValue) {
-        this.primitivesDefaultedForNullValue = primitivesDefaultedForNullValue;
-    }
-
-    /**
-     * Return whether we're defaulting Java primitives in the case of mapping a null value
-     * from corresponding database fields.
-     */
-    public boolean isPrimitivesDefaultedForNullValue() {
-        return primitivesDefaultedForNullValue;
-    }
-
-
-    public static String firstLetterToUpper(String val) {
-        char[] array = val.toCharArray();
-        array[0] -= 32;
-        return String.valueOf(array);
-    }
-
-    /**
      * Extract the values for all columns in the current row.
      * <p>Utilizes public setters and result set metadata.
      *
      * @see ResultSetMetaData
      */
+    @Override
     public T mapRow(ResultSet rs, int rowNumber) throws SQLException {
+        Assert.state(this.mappedClass != null, "Mapped class was not specified");
         T mappedObject = BeanUtils.instantiate(this.mappedClass);
-        ColumnMapping columnMapping = (ColumnMapping) mappedObject;
-        columnMapping.mappingColumn(rs);
+        // 这里将实体类和接口进行映射,如果实体类中有实现ColumnMapping这个接口,可以手动赋值
+        if (mappedObject instanceof ColumnMapping) {
+            ((ColumnMapping) mappedObject).mappingColumn(rs);
+            return mappedObject;
+        }
+
+        BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(mappedObject);
+        initBeanWrapper(bw);
+
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int columnCount = rsmd.getColumnCount();
+
+        for (int index = 1; index <= columnCount; index++) {
+            String column = JdbcUtils.lookupColumnName(rsmd, index);
+            PropertyDescriptor pd = this.mappedFields.get(column.replaceAll(" ", "").toLowerCase());
+            if (pd != null) {
+                try {
+                    Object value = getColumnValue(rs, index, pd);
+                    try {
+                        bw.setPropertyValue(pd.getName(), value);
+                    } catch (TypeMismatchException e) {
+
+                    }
+                } catch (NotWritablePropertyException ex) {
+
+                }
+            }
+        }
+
         return mappedObject;
     }
 
@@ -225,6 +198,20 @@ public class RowMapper6<T> implements RowMapper<T> {
      * @param bw the BeanWrapper to initialize
      */
     protected void initBeanWrapper(BeanWrapper bw) {
+//        this.mappedClass = mappedClass;
+//        this.mappedFields = new HashMap<String, PropertyDescriptor>();
+//        this.mappedProperties = new HashSet<String>();
+//        PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(mappedClass);
+//        for (PropertyDescriptor pd : pds) {
+//            if (pd.getWriteMethod() != null) {
+//                this.mappedFields.put(pd.getName().toLowerCase(), pd);
+//                String underscoredName = underscoreName(pd.getName());
+//                if (!pd.getName().toLowerCase().equals(underscoredName)) {
+//                    this.mappedFields.put(underscoredName, pd);
+//                }
+//                this.mappedProperties.add(pd.getName());
+//            }
+//        }
     }
 
     /**

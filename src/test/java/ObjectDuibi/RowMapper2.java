@@ -1,7 +1,7 @@
 package ObjectDuibi;
 
 import com.esotericsoftware.reflectasm.MethodAccess;
-import model.TTest;
+import com.x.jdbc.model.TTest;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;

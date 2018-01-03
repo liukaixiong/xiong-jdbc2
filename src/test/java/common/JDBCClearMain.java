@@ -9,9 +9,9 @@ import java.util.List;
  * @create 2017-03-15 23:08
  * @email liukx@elab-plus.com
  **/
-public class JDBC {
+public class JDBCClearMain {
 
-    public static void mysqlTest() throws SQLException {
+    public static void mysqlTest(String table, String type, int typeSize, String updateColumn) throws SQLException {
         Connection conn = null;
         // MySQL的JDBC URL编写方式：jdbc:mysql://主机名称：连接端口/数据库的名称?参数=值
         // 避免中文乱码要指定useUnicode和characterEncoding
@@ -33,15 +33,11 @@ public class JDBC {
             // 一个Connection代表一个数据库连接
             conn = DriverManager.getConnection(url);
             // Statement里面带有很多方法，比如executeUpdate可以实现插入，更新和删除等
-
-//            Statement stmt = conn.createStatement();
-//            String sql = "select a.id,a.uuid from t_daren_score_62 a where a.type = '1' order by a.uuid,id asc";
-            String sql = "select a.id,a.user_id from t_daren_score_62 a group by ? ;";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            preparedStatement.setString(1, "a.type");
-            ResultSet rs = preparedStatement.executeQuery();
+            Statement stmt = conn.createStatement();
+            String sql = "select a.id,a.uuid from " + table + " a where a.type = '" + type + "' order by a.uuid,id asc";
+            System.out.println("查询SQL : " + sql);
             Long start = System.currentTimeMillis();
-//            ResultSet rs = stmt.executeQuery(sql);
+            ResultSet rs = stmt.executeQuery(sql);
             Long end = System.currentTimeMillis();
             Long time = end - start;
             System.out.println("查询耗时:" + time);
@@ -49,7 +45,7 @@ public class JDBC {
             List<String> list = new ArrayList<String>();
             Long s = System.currentTimeMillis();
             int index = 1;
-            int maxIndex = 5;
+            int maxIndex = typeSize;
             String tempUuid = "";
             while (rs.next()) {
                 String id = rs.getString(1);
@@ -61,12 +57,12 @@ public class JDBC {
                     tempUuid = uuid;
                 }
                 System.out.println(id + "--------" + uuid + "-------" + index);
-                String updateSql = "update t_daren_score set json = '" + index + "' where id = '" + id + "' and uuid = '" + uuid + "'";
+                String updateSql = "update " + table + " set " + updateColumn + " = '" + index + "' where id = '" + id + "' and uuid = '" + uuid + "'";
                 System.out.println(updateSql);
-//                stmt.addBatch(updateSql);
-//                index++;
+                stmt.addBatch(updateSql);
+                index++;
             }
-//            stmt.executeBatch();
+            stmt.executeBatch();
             Long e = System.currentTimeMillis();
             System.out.println(" 手动转对象耗时 : " + (e - s) + "\t 结果集大小:" + list.size());
 
@@ -81,6 +77,10 @@ public class JDBC {
     }
 
     public static void main(String[] args) throws SQLException {
-        mysqlTest();
+        String tableName = "t_daren_score";
+        String type = "6";
+        int typeSize = 6;
+        String updateColumn = "updator";
+        mysqlTest(tableName, type, typeSize, updateColumn);
     }
 }

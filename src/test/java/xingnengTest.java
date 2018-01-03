@@ -1,5 +1,5 @@
-import JDBCTemplate.JDBCTemplateUtils;
-import model.TTest;
+import com.x.jdbc.template.JDBCTemplateSupport;
+import com.x.jdbc.model.TTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
@@ -15,10 +15,9 @@ import java.util.Map;
  * @email liukx@elab-plus.com
  **/
 public class xingnengTest {
-    JDBCTemplateUtils jdbcTemplateUtils = new JDBCTemplateUtils();
-
+    JDBCTemplateSupport jdbcTemplateUtils = new JDBCTemplateSupport();
+    JdbcTemplate jdbcTemplate = new JDBCTemplateSupport();
     public JdbcTemplate getJdbcTemplate() {
-        JdbcTemplate jdbcTemplate = new JDBCTemplateUtils();
         return jdbcTemplate;
     }
 
@@ -71,11 +70,11 @@ public class xingnengTest {
 
     private void insert() {
 //        testInsert(0);
-        testInsert(0, 1);
-        testInsert(1, 1);
+//        testInsert(0, 1);
+//        testInsert(1, 1);
         System.out.println("初始化完毕.....");
-        testInsert(0, 100000);
-        testInsert(1, 100000);
+        testInsert(1, 1000);
+//        testInsert(1, 100000);
     }
 
 

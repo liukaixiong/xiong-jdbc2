@@ -1,9 +1,9 @@
 package xn;
 
-import JDBCTemplate.JDBCTemplateUtils;
+import com.x.jdbc.template.JDBCTemplateSupport;
 import ObjectDuibi.JDBCTemplate2;
 import com.alibaba.druid.pool.DruidDataSource;
-import model.TTest;
+import com.x.jdbc.model.TTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,7 +18,7 @@ import java.util.Map;
  * @email liukx@elab-plus.com
  **/
 public class JDBCXN {
-    JDBCTemplateUtils jdbcTemplateUtils = new JDBCTemplateUtils();
+    JDBCTemplateSupport jdbcTemplateUtils = new JDBCTemplateSupport();
     static JDBCTemplate2 jdbcTemplate = null;
 
     static {
@@ -26,14 +26,19 @@ public class JDBCXN {
         jdbcTemplate.setFetchSize(Integer.MIN_VALUE);
         DruidDataSource druidDataSource = new DruidDataSource();
         druidDataSource.setDriverClassName("com.mysql.jdbc.Driver");
-        druidDataSource.setUrl("jdbc:mysql://localhost/xiong?characterEncoding=UTF-8");
+        druidDataSource.setUrl("jdbc:mysql://139.196.5.127/dw?characterEncoding=UTF-8");
         druidDataSource.setUsername("root");
-        druidDataSource.setPassword("1234");
+        druidDataSource.setPassword("elab@123");
         jdbcTemplate.setDataSource(druidDataSource);
     }
 
     public JdbcTemplate getJdbcTemplate() {
-        JdbcTemplate jdbcTemplate = new JDBCTemplateUtils();
+        JdbcTemplate jdbcTemplate = new JDBCTemplateSupport();
+        return jdbcTemplate;
+    }
+
+    public JDBCTemplateSupport getJdbcTemplateUtils() {
+        JDBCTemplateSupport jdbcTemplate = new JDBCTemplateSupport();
         return jdbcTemplate;
     }
 
@@ -106,14 +111,9 @@ public class JDBCXN {
     ///////////////////////////////////////////////query//////////////////////////////////////
 
     public void queryForMap() {
-        String sql = " select\n" +
-                "      id\n" +
-                "      ,username,name,sex,status,created,time,test_id,love_name\n" +
-                "      from t_test\n" +
-                "      where\n" +
-                "      id = ?";
+        String sql = " select    * num from dw.a_global_nonowner where DATE_FORMAT(created,'%Y-%m-%d')='2017-09-30' limit 1000\n";
         Object[] objects = new Object[1];
-        objects[0] = "2";
+        objects[0] = "1";
         Long start = System.currentTimeMillis();
         Map<String, Object> map = null;
         try {
@@ -128,20 +128,29 @@ public class JDBCXN {
     }
 
     public void queryForListMap() {
-        String sql = " select\n" +
-                "      id\n" +
-                "      ,username,name,sex,status,created,time,test_id,love_name\n" +
-                "      from t_test\n" +
-                "      where\n" +
-                "      status = ?";
+        String sql = " select    *   from dw.a_global_nonowner where DATE_FORMAT(created,'%Y-%m-%d') = ? limit 1000";
         Object[] objects = new Object[1];
-        objects[0] = "1";
+        objects[0] = "2017-08-01";
         Long start = System.currentTimeMillis();
         List<Map<String, Object>> maps = getJdbcTemplate().queryForList(sql, objects);
         Long end = System.currentTimeMillis();
         Long time = end - start;
         System.out.println(" 查询数据量: " + maps.size());
         System.out.println(" 耗时 : " + time);
+        start = System.currentTimeMillis();
+        for (int i = 0; i < maps.size(); i++) {
+            Map<String, Object> objectMap = maps.get(i);
+            objectMap.put("aaa", i);
+            String insertSql = "INSERT INTO a_global_nonowner ( product, project, system, uid, phone, time, pageid, keyvalue, usetime, bannertype, title, click_sortno, module, name, arrive_time, consultant, photoname, buildingnum, floornum, poi_name, videoname, categoryname, plancode, youngs, childens, olds, ares, commenttitle, commentscore, liveid, spacename, sellname, currentstyleid, selectstyleid, sex, phonenum, rooms, date_day, parent_pageid, version, status, creator, created, updator, updated, resource_id, resource_name, type, category, label, value, attrs, url, lat, lng, session_id, network, globalall_id) " +
+                    "VALUES ( :product, :project, :system, :uid, :phone, :time,:pageid, :keyvalue, :usetime, :bannertype, :title, :click_sortno, :module, :name, :arrive_time, :consultant, :photoname, :buildingnum, :floornum, :poi_name, :videoname, :categoryname, :plancode, :youngs, :childens, :olds, :ares, :commenttitle, :commentscore, :liveid, :spacename, :sellname, :currentstyleid, :selectstyleid, :sex, :phonenum, :rooms, :date_day, :parent_pageid, :version, :status, :creator, :created, :updator, :updated, :resource_id,:resource_name, :type, :category, :label, :value, :attrs, :url, :lat, :lng, :session_id, :network, :aaa);";
+            int i1 = jdbcTemplateUtils.executeInsert(insertSql, objectMap);
+            System.out.println("=============执行条数[" + i + "]" + "=====================结果 : " + i1);
+        }
+        end = System.currentTimeMillis();
+        time = end - start;
+        System.out.println(" 11查询数据量: " + maps.size());
+        System.out.println(" 111耗时 : " + time);
+
     }
 
     public void queryForListObject() {
@@ -240,7 +249,7 @@ public class JDBCXN {
             List<TTest> query3 = jdbcTemplate.queryForList7(sql, p, TTest.class);
             Long end3 = System.currentTimeMillis();
             Long time3 = end3 - start3;
-            System.out.println(" 自定义的执行时间777 - " + time3 + " size : " + query3.size()+" fetch : "+jdbcTemplate.getFetchSize());
+            System.out.println(" 自定义的执行时间777 - " + time3 + " size : " + query3.size() + " fetch : " + jdbcTemplate.getFetchSize());
             System.out.println(" --------------------手动set以及混合jdbcTemplate映射开始------------- ");
         }
         System.out.println();
@@ -250,15 +259,15 @@ public class JDBCXN {
         JDBCXN xn = new JDBCXN();
 //        xn.testBatchInsert();
 //        xn.queryForMap();
-        System.out.println("初始化完毕...");
+//        System.out.println("初始化完毕...");
 //        for (int i = 0; i < 10; i++) {
-//            System.out.println(" 测试第 ["+i+"] 次..");
-//            xn.queryForListMap();
+//            System.out.println(" 测试第 [" + i + "] 次..");
+        xn.queryForListMap();
 //        }
-        for (int i = 0; i < 1; i++) {
-            System.out.println(" 测试 第 [" + i + "]次");
-            xn.queryForListObject();
-        }
+//        for (int i = 0; i < 1; i++) {
+//            System.out.println(" 测试 第 [" + i + "]次");
+//            xn.queryForListObject();
+//        }
 
         // 反射对比
 //        xn.fansheduibi();

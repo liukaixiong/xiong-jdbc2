@@ -1,6 +1,6 @@
-import JDBCTemplate.JDBCTemplateUtils;
-import model.TTest;
-import model.TTest1;
+import com.x.jdbc.template.JDBCTemplateSupport;
+import com.x.jdbc.model.TTest;
+import com.x.jdbc.model.TTest1;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import java.util.*;
@@ -11,7 +11,7 @@ import java.util.*;
  * @email liukx@elab-plus.com
  **/
 public class test {
-    private static JDBCTemplateUtils jdbcTemplate = new JDBCTemplateUtils();
+    private static JDBCTemplateSupport jdbcTemplate = new JDBCTemplateSupport();
 
     public static void insert() {
         System.out.println("★★★★★★★★★★★★★★★★★★★★★insert★★★★★★★★★★★★★★★★★★★★★★★★");
@@ -95,13 +95,13 @@ public class test {
     public static void findObject() {
         System.out.println("★★★★★★★★★★★★★★★★★★★★★findObject★★★★★★★★★★★★★★★★★★★★★★★★");
         Map map = new LinkedHashMap();
-        map.put("id", 2);
+        map.put("id", 1);
         map.put("age", 18);
         map.put("ggg", "sssssss");
         Long start = System.currentTimeMillis();
         TTest test = jdbcTemplate.executeQueryObject("test.selectByPrimaryKey", map, TTest.class);
         Long end = System.currentTimeMillis();
-        System.out.println(" 查询耗时 : " + (end - start) + " 数据大小: ");
+        System.out.println(" 查询耗时 : " + (end - start) + " 数据大小: " + test.toString());
     }
 
     public static void findListMap() {
@@ -155,9 +155,9 @@ public class test {
 //        findSqlOjbect();
 //        update();
 //        findMap();
-//        findObject();
+        findObject();
 //        findRowSet();
-        findBigList();
+//        findBigList();
 //        for (int i = 0; i < 10; i++) {
 //            System.out.println(" 执行第 [" + (i + 1) + "]");
         //TODO 测试注解 赋值的时候做测试,将Test.class的接口类去掉 做测试.!
