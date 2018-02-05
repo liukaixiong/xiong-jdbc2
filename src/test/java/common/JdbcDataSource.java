@@ -1,7 +1,7 @@
 package common;
 
-import com.x.jdbc.template.JDBCTemplateSupport;
-import com.x.jdbc.model.TTest;
+import com.x.jdbc.template.JdbcTemplateSupport;
+import model.TTest;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -17,7 +17,7 @@ import java.util.List;
  * @email liukx@elab-plus.com
  **/
 public class JdbcDataSource {
-    static DataSource dataSource = new JDBCTemplateSupport().getDataSource();
+    static DataSource dataSource = new JdbcTemplateSupport().getDataSource();
 
     public static void mxCheckJDBC() {
         String sql = " select\n" +

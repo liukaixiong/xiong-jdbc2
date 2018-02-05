@@ -1,9 +1,9 @@
 package xn;
 
-import com.x.jdbc.template.JDBCTemplateSupport;
 import ObjectDuibi.JDBCTemplate2;
 import com.alibaba.druid.pool.DruidDataSource;
-import com.x.jdbc.model.TTest;
+import com.x.jdbc.template.JdbcTemplateSupport;
+import model.TTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,7 +18,7 @@ import java.util.Map;
  * @email liukx@elab-plus.com
  **/
 public class JDBCXN {
-    JDBCTemplateSupport jdbcTemplateUtils = new JDBCTemplateSupport();
+    JdbcTemplateSupport jdbcTemplateUtils = new JdbcTemplateSupport();
     static JDBCTemplate2 jdbcTemplate = null;
 
     static {
@@ -33,12 +33,12 @@ public class JDBCXN {
     }
 
     public JdbcTemplate getJdbcTemplate() {
-        JdbcTemplate jdbcTemplate = new JDBCTemplateSupport();
+        JdbcTemplate jdbcTemplate = new JdbcTemplateSupport();
         return jdbcTemplate;
     }
 
-    public JDBCTemplateSupport getJdbcTemplateUtils() {
-        JDBCTemplateSupport jdbcTemplate = new JDBCTemplateSupport();
+    public JdbcTemplateSupport getJdbcTemplateUtils() {
+        JdbcTemplateSupport jdbcTemplate = new JdbcTemplateSupport();
         return jdbcTemplate;
     }
 

@@ -7,8 +7,41 @@
     http://www.springframework.org/schema/context
     http://www.springframework.org/schema/context/spring-context.xsd">
 
+    <bean id="mysqlDataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/xiong?characterEncoding=utf-8"/>
+        <property name="username" value="root"/>
+        <property name="password" value="1234"/>
+        <property name="initialSize" value="1"/>
+        <property name="maxActive" value="20"/>
+        <property name="minIdle" value="1"/>
+        <property name="maxWait" value="60000"/>
+        <property name="validationQuery" value="select 1 from dual"/>
+        <property name="testOnBorrow" value="false"/>
+        <property name="testOnReturn" value="false"/>
+        <property name="testWhileIdle" value="true"/>
+        <property name="timeBetweenEvictionRunsMillis" value="60000"/>
+        <property name="minEvictableIdleTimeMillis" value="25200000"/>
+        <property name="removeAbandoned" value="true"/>
+        <property name="removeAbandonedTimeout" value="1800"/>
+        <property name="logAbandoned" value="true"/>
+        <property name="filters" value="mergeStat"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="com.x.jdbc.template.JdbcTemplateSupport">
+        <property name="dataSource" ref="mysqlDataSource"/>
+    </bean>
+
+    <!-- 构建一个配置工厂 -->
+    <bean id="configurableFactory" class="com.x.jdbc.sql.ConfigurableFactory">
+        <property name="sqlConfigurableLocations" value="sql"/>
+    </bean>
+
+    <!-- 扫描包 -->
     <bean id="daoScannerConfigurer" class="com.x.jdbc.spring.DaoScannerConfigurer">
         <property name="basePackage" value="dao"/>
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+        <property name="configurableFactory" ref="configurableFactory" />
     </bean>
 
 

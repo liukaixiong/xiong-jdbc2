@@ -1,6 +1,6 @@
-import com.x.jdbc.template.JDBCTemplateSupport;
-import com.x.jdbc.model.TTest;
-import com.x.jdbc.model.TTest1;
+import com.x.jdbc.template.JdbcTemplateSupport;
+import model.TTest;
+import model.TTest1;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import java.util.*;
@@ -11,7 +11,7 @@ import java.util.*;
  * @email liukx@elab-plus.com
  **/
 public class test {
-    private static JDBCTemplateSupport jdbcTemplate = new JDBCTemplateSupport();
+    private static JdbcTemplateSupport jdbcTemplate = new JdbcTemplateSupport();
 
     public static void insert() {
         System.out.println("★★★★★★★★★★★★★★★★★★★★★insert★★★★★★★★★★★★★★★★★★★★★★★★");
@@ -29,7 +29,7 @@ public class test {
         System.out.println(" 查询耗时 : " + (end - start) + " 数据大小:" + i);
     }
 
-    public static void update() {
+    public static void update() throws Exception {
         System.out.println("★★★★★★★★★★★★★★★★★★★★★update★★★★★★★★★★★★★★★★★★★★★★★★");
         TTest t = new TTest();
         // t.setUsername("添加数据");

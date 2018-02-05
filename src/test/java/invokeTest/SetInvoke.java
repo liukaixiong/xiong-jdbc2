@@ -1,6 +1,6 @@
 package invokeTest;
 
-import com.x.jdbc.model.TTest;
+import model.TTest;
 
 import java.util.ArrayList;
 import java.util.Date;

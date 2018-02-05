@@ -1,26 +1,27 @@
 package com.x.jdbc.template.row;
 
-import com.x.jdbc.anno.Column;
 import com.x.jdbc.mapping.ColumnMapping;
+import com.x.jdbc.model.JoinPropertiesModel;
+import com.x.jdbc.sql.ConfigurableFactory;
+import com.x.jdbc.template.IJdbcTemplate;
+import com.x.jdbc.template.facotry.PropertiesProxyFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.*;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Column;
+import javax.persistence.JoinTable;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * JDBCTemplate原始反射加上手动set方法混合使用方式
@@ -29,12 +30,14 @@ import java.util.Set;
  * @create 2017-03-17 17:23
  * @email liukx@elab-plus.com
  **/
-public class MyRowMapper<T> implements RowMapper<T> {
+public class JoinRowMapper<T> implements RowMapper<T> {
 
     /**
      * Logger available to subclasses
      */
     protected final Log logger = LogFactory.getLog(getClass());
+
+    private final ConfigurableFactory configurableFactory;
 
     /**
      * The class we are mapping to
@@ -47,17 +50,25 @@ public class MyRowMapper<T> implements RowMapper<T> {
     private Map<String, PropertyDescriptor> mappedFields;
 
     /**
-     * Set of bean properties we provide mapping for
+     * 设置bean的属性
      */
     private Set<String> mappedProperties;
+
+    private final IJdbcTemplate jdbcTemplate;
+
+    private List<JoinPropertiesModel> joinPropertiesModelList;
+
+    private boolean isProxy = false;
 
 
     /**
      * 构建一个新的列映射
      *
-     * @param mappedClass the class that each row should be mapped to
+     * @param jdbcTemplate
      */
-    public MyRowMapper(Class<T> mappedClass) {
+    public JoinRowMapper(IJdbcTemplate jdbcTemplate, ConfigurableFactory configurableFactory, Class<T> mappedClass) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.configurableFactory = configurableFactory;
         initialize(mappedClass);
     }
 
@@ -84,12 +95,15 @@ public class MyRowMapper<T> implements RowMapper<T> {
         this.mappedClass = mappedClass;
         this.mappedFields = new HashMap<String, PropertyDescriptor>();
         this.mappedProperties = new HashSet<String>();
+        this.joinPropertiesModelList = new ArrayList<JoinPropertiesModel>();
+
         PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(mappedClass);
         for (PropertyDescriptor pd : pds) {
             if (pd.getWriteMethod() != null) {
                 String name = pd.getName().toLowerCase();
                 try {
                     Field declaredField = mappedClass.getDeclaredField(pd.getName());
+
                     // 判断该注解是否存在
                     if (declaredField.getAnnotation(Column.class) != null) {
                         name = declaredField.getAnnotation(Column.class).name();
@@ -99,19 +113,31 @@ public class MyRowMapper<T> implements RowMapper<T> {
                         //将字段中的名称绑定到map中
                         this.mappedFields.put(name, pd);
                     }
+
+
+                    // 将驼峰的命名也备份到里面,切记,优先级是 Column -> 驼峰 -> 数据库字段名称
+                    String underscoredName = underscoreName(pd.getName());
+                    if (!pd.getName().toLowerCase().equals(underscoredName)) {
+                        this.mappedFields.put(underscoredName, pd);
+                    }
+                    this.mappedProperties.add(name);
+
+
+                    JoinTable joinTable = declaredField.getAnnotation(JoinTable.class);
+                    if (joinTable != null) {
+                        this.isProxy = true;
+                        String sql = this.configurableFactory.getSqlConfigurableFactory().getSql(joinTable.schema());
+
+                        JoinPropertiesModel joinPropertiesModel = new JoinPropertiesModel(pd, joinTable, sql);
+                        joinPropertiesModelList.add(joinPropertiesModel);
+                    }
+
                 } catch (NoSuchFieldException e) {
                     e.printStackTrace();
                 }
 
-                // 将驼峰的命名也备份到里面,切记,优先级是 Column -> 驼峰 -> 数据库字段名称
-                String underscoredName = underscoreName(pd.getName());
-                if (!pd.getName().toLowerCase().equals(underscoredName)) {
-                    this.mappedFields.put(underscoredName, pd);
-                }
-                this.mappedProperties.add(name);
             }
         }
-//        System.out.println("复制完毕..." + this.mappedFields.toString());
     }
 
     /**
@@ -165,7 +191,6 @@ public class MyRowMapper<T> implements RowMapper<T> {
         }
 
         BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(mappedObject);
-        initBeanWrapper(bw);
 
         ResultSetMetaData rsmd = rs.getMetaData();
         int columnCount = rsmd.getColumnCount();
@@ -187,32 +212,15 @@ public class MyRowMapper<T> implements RowMapper<T> {
             }
         }
 
+        if (isProxy) {
+            PropertiesProxyFactory propertiesProxyFactory = new PropertiesProxyFactory();
+            Object proxy = propertiesProxyFactory.createProxy(jdbcTemplate, mappedObject, this.joinPropertiesModelList);
+            return (T) proxy;
+        }
+
         return mappedObject;
     }
 
-    /**
-     * Initialize the given BeanWrapper to be used for row mapping.
-     * To be called for each row.
-     * <p>The default implementation is empty. Can be overridden in subclasses.
-     *
-     * @param bw the BeanWrapper to initialize
-     */
-    protected void initBeanWrapper(BeanWrapper bw) {
-//        this.mappedClass = mappedClass;
-//        this.mappedFields = new HashMap<String, PropertyDescriptor>();
-//        this.mappedProperties = new HashSet<String>();
-//        PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(mappedClass);
-//        for (PropertyDescriptor pd : pds) {
-//            if (pd.getWriteMethod() != null) {
-//                this.mappedFields.put(pd.getName().toLowerCase(), pd);
-//                String underscoredName = underscoreName(pd.getName());
-//                if (!pd.getName().toLowerCase().equals(underscoredName)) {
-//                    this.mappedFields.put(underscoredName, pd);
-//                }
-//                this.mappedProperties.add(pd.getName());
-//            }
-//        }
-    }
 
     /**
      * Retrieve a JDBC object value for the specified column.
@@ -238,11 +246,12 @@ public class MyRowMapper<T> implements RowMapper<T> {
      * Static factory method to create a new BeanPropertyRowMapper
      * (with the mapped class specified only once).
      *
-     * @param mappedClass the class that each row should be mapped to
+     * @param jdbcTemplate
+     * @param configurableFactory
+     * @param mappedClass         the class that each row should be mapped to
      */
-    public static <T> BeanPropertyRowMapper<T> newInstance(Class<T> mappedClass) {
-        BeanPropertyRowMapper<T> newInstance = new BeanPropertyRowMapper<T>();
-        newInstance.setMappedClass(mappedClass);
+    public static <T> JoinRowMapper<T> newInstance(IJdbcTemplate jdbcTemplate, ConfigurableFactory configurableFactory, Class<T> mappedClass) {
+        JoinRowMapper<T> newInstance = new JoinRowMapper<T>(jdbcTemplate, configurableFactory, mappedClass);
         return newInstance;
     }
 

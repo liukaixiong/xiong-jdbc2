@@ -2,6 +2,7 @@ package com.x.jdbc.template;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.RowMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,7 @@ import java.util.Map;
  * @create 2018-01-03 10:02
  * @email liukx@elab-plus.com
  **/
-public interface IJDBCTemplate extends JdbcOperations {
+public interface IJdbcTemplate extends JdbcOperations {
 
     /**
      * 执行添加操作
@@ -31,7 +32,7 @@ public interface IJDBCTemplate extends JdbcOperations {
      * @param o
      * @return
      */
-    public int executeUpdate(String sqlid, Object o);
+    public int executeUpdate(String sqlid, Object o) throws Exception;
 
     /**
      * 执行查询返回Map对象
@@ -52,6 +53,16 @@ public interface IJDBCTemplate extends JdbcOperations {
      * @return
      */
     public <T> T executeQueryObject(String sqlid, Object o, Class<T> elementType);
+
+    /**
+     * 执行代理类
+     *
+     * @param sql
+     * @param o
+     * @param <T>
+     * @return
+     */
+    public <T> T executeQueryObject(String sql, Object o, RowMapper<T> rm);
 
     /**
      * 执行查询大数据量语句,并返回对应的集合

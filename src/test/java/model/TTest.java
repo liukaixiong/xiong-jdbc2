@@ -1,18 +1,24 @@
-package com.x.jdbc.model;
+package model;
 
-import com.x.jdbc.mapping.ColumnMapping;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.Table;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.List;
 
 //import javax.persistence.Table;
-
-//@Table(name ="t_test")
-public class TTest implements ColumnMapping {
+//implements ColumnMapping
+@Table(name = "t_test")
+public class TTest {
     //
     // 表字段 : t_test.id
 //    @javax.persistence.Column(name="ids")
+    @Id
     private Integer id;
 
     //
@@ -47,19 +53,49 @@ public class TTest implements ColumnMapping {
 
     //
     // 表字段 : t_test.test_id
-//    @javax.persistence.Column(name="test_id1")
+//    @Column(name = "test_id")
     private String test_id;
 
     //
     // 表字段 : t_test.love_name
 //    @javax.persistence.Column(name="love_name1")
+//    @Ignore
     private String love_name;
 
     //    @Column(name = "girlName")
+    @Ignore
     private String girlName;
 
     //    @javax.persistence.Column(name="girlStatus1")
+    @Ignore
     private String girlStatus;
+
+    @JoinTable(schema = "dao.DaoInterface.selectByExample", joinColumns = {
+            @JoinColumn(name = "id", referencedColumnName = "id"),
+            @JoinColumn(name = "status", referencedColumnName = "status")
+    })
+    private TTest test;
+
+    @JoinTable(schema = "dao.DaoInterface.selectByExample", joinColumns = {
+            @JoinColumn(name = "test_id", referencedColumnName = "test_id")
+    })
+    private List<TTest> testList;
+
+    public List<TTest> getTestList() {
+        return testList;
+    }
+
+    public void setTestList(List<TTest> testList) {
+        this.testList = testList;
+    }
+
+    public TTest getTest() {
+        return test;
+    }
+
+    public void setTest(TTest test) {
+        this.test = test;
+    }
 
     public String getGirlName() {
         return girlName;

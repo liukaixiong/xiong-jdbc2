@@ -12,18 +12,26 @@
         ,username,name,sex,status,created,time,test_id,love_name
         from t_test
         where
-        <!--id = :id-->
+        id = :id
         <!--and username = :username-->
         <!--and name = :name-->
         <!--and sex = :sex-->
         <!--and -->
-        status = :status
+        and status = :status
         <!--and created = :created-->
         <!--and time = :time-->
-        <!--and test_id = :test_id-->
+        and test_id = :test_id
         <!--and love_name = :love_name-->
     </sql>
 
+    <sql id="selectById">
+        select
+        id
+        ,username,name,sex,status,created,time,test_id,love_name
+        from t_test
+        where
+        id = :id
+    </sql>
     <sql id="selectByName">
         select
         id
@@ -47,10 +55,10 @@
         delete from t_test
         where id = :id
     </sql>
-    <sql id="insert">
-        insert into t_test (username, name, sex, status, created, time, test_id, love_name)
-        values (:username, :name, :sex, :status, :created, :time, :test_id, :love_name)
-    </sql>
+    <!--<sql id="insert">-->
+        <!--insert into t_test (username, name, sex, status, created, time, test_id, love_name)-->
+        <!--values (:username, :name, :sex, :status, :created, :time, :test_id, :love_name)-->
+    <!--</sql>-->
     <sql id="updateByPrimaryKey">
         update t_test
         set

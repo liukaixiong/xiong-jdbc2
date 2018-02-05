@@ -1,6 +1,7 @@
 package com.x.jdbc.template.facotry;
 
-import com.x.jdbc.template.IJDBCTemplate;
+import com.x.jdbc.sql.ConfigurableFactory;
+import com.x.jdbc.template.IJdbcTemplate;
 import com.x.jdbc.template.binding.DaoRegister;
 import org.springframework.beans.factory.FactoryBean;
 
@@ -17,13 +18,23 @@ import org.springframework.beans.factory.FactoryBean;
 public class DaoFactoryBean<T> implements FactoryBean<T> {
 
     //具体执行者
-    private IJDBCTemplate jdbcTemplate;
+    private IJdbcTemplate jdbcTemplate;
 
     //检查父类
     private Class<?> mapperInterface;
 
     // dao注册工厂
     private DaoRegister daoRegister;
+
+    private ConfigurableFactory configurableFactory;
+
+    public ConfigurableFactory getConfigurableFactory() {
+        return configurableFactory;
+    }
+
+    public void setConfigurableFactory(ConfigurableFactory configurableFactory) {
+        this.configurableFactory = configurableFactory;
+    }
 
     public Class<?> getMapperInterface() {
         return mapperInterface;
@@ -41,11 +52,11 @@ public class DaoFactoryBean<T> implements FactoryBean<T> {
         this.mapperInterface = mapperInterface;
     }
 
-    public IJDBCTemplate getJdbcTemplate() {
+    public IJdbcTemplate getJdbcTemplate() {
         return jdbcTemplate;
     }
 
-    public void setJdbcTemplate(IJDBCTemplate jdbcTemplate) {
+    public void setJdbcTemplate(IJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -57,7 +68,7 @@ public class DaoFactoryBean<T> implements FactoryBean<T> {
      */
     @Override
     public T getObject() throws Exception {
-        return (T) daoRegister.getDao(mapperInterface, jdbcTemplate);
+        return (T) daoRegister.getDao(mapperInterface, jdbcTemplate,configurableFactory);
     }
 
     /**

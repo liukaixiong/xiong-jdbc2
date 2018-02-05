@@ -1,6 +1,7 @@
 package com.x.jdbc.template.binding;
 
-import com.x.jdbc.template.IJDBCTemplate;
+import com.x.jdbc.sql.ConfigurableFactory;
+import com.x.jdbc.template.IJdbcTemplate;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -38,8 +39,8 @@ public class DaoProxyFactory<T> {
         return (T) Proxy.newProxyInstance(this.mapperInterface.getClassLoader(), new Class[]{this.mapperInterface}, mapperProxy);
     }
 
-    public T newInstance(IJDBCTemplate jdbcTemplate) {
-        DaoProxy<T> mapperProxy = new DaoProxy(jdbcTemplate, this.mapperInterface, this.methodCache);
+    public T newInstance(IJdbcTemplate jdbcTemplate, ConfigurableFactory configurableFactory) {
+        DaoProxy<T> mapperProxy = new DaoProxy(jdbcTemplate, this.mapperInterface, this.methodCache,configurableFactory);
         return this.newInstance(mapperProxy);
     }
 }

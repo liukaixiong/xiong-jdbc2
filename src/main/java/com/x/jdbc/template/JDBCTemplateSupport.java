@@ -1,10 +1,13 @@
 package com.x.jdbc.template;
 
+import com.alibaba.druid.pool.DruidDataSource;
+import com.x.jdbc.model.JdbcParamsModel;
+import com.x.jdbc.sql.config.SqlCommandType;
 import com.x.jdbc.template.params.NamedParameterUtils2;
 import com.x.jdbc.template.params.ParsedSql2;
-import com.x.jdbc.template.row.MyRowMapper;
-import com.alibaba.druid.pool.DruidDataSource;
-import com.x.jdbc.model.JDBCParamsModel;
+import com.x.jdbc.template.row.DefaultRowMapper;
+import com.x.jdbc.template.sql.method.CheckSqlProcess;
+import com.x.jdbc.template.sql.method.DefaultCheckSQLProcess;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.*;
@@ -15,15 +18,11 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.util.Assert;
-import com.x.jdbc.sql.config.SqlKit;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * jdbcTemplate拓展类
@@ -32,7 +31,7 @@ import java.util.Map;
  * @create 2017-03-13 19:53
  * @email liukx@elab-plus.com
  **/
-public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
+public class JdbcTemplateSupport extends JdbcTemplate implements IJdbcTemplate {
 
 
     {
@@ -51,6 +50,9 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
 
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    private CheckSqlProcess checkSQLProcess = new DefaultCheckSQLProcess();
+
+
     public NamedParameterJdbcTemplate getNamedParameterJdbcTemplate() {
         if (this.namedParameterJdbcTemplate == null) {
             this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(this);
@@ -59,6 +61,9 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
         return this.namedParameterJdbcTemplate;
     }
 
+    /**
+     * 缓存大小
+     */
     private volatile int cacheLimit = DEFAULT_CACHE_LIMIT;
 
     public void setCacheLimit(int cacheLimit) {
@@ -127,12 +132,7 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
      */
     @Override
     public <T> List<T> queryBigDataForList(String sql, Object[] args, Class<T> elementType) throws DataAccessException {
-        return query(sql, args, new MyRowMapper<T>(elementType));
-    }
-
-    private java.sql.Timestamp getCurrentTimeStamp() {
-        java.util.Date today = new java.util.Date();
-        return new java.sql.Timestamp(today.getTime());
+        return query(sql, args, new DefaultRowMapper<T>(elementType));
     }
 
     /**
@@ -146,7 +146,7 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
      */
     @Override
     public <T> List<T> executeQueryList(String sqlid, Object o, Class<T> elementType) {
-        JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
+        JdbcParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
         List<T> ts = queryForList(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects(), elementType);
         return ts;
     }
@@ -154,13 +154,13 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
     /**
      * 查询一个Map对象的集合
      *
-     * @param sqlid
+     * @param sql
      * @param o
      * @return
      */
     @Override
-    public List<Map<String, Object>> executeQueryforListMap(String sqlid, Object o) {
-        JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
+    public List<Map<String, Object>> executeQueryforListMap(String sql, Object o) {
+        JdbcParamsModel jdbcParamsModel = commonParseSql(sql, o);
         List<Map<String, Object>> maps = queryForList(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects());
         return maps;
     }
@@ -168,15 +168,15 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
     /**
      * 查询大量数据返回的情况下
      *
-     * @param sqlid
+     * @param sql
      * @param o
      * @param elementType
      * @param <T>
      * @return
      */
     @Override
-    public <T> List<T> executeQueryBigDataList(String sqlid, Object o, Class<T> elementType) {
-        JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
+    public <T> List<T> executeQueryBigDataList(String sql, Object o, Class<T> elementType) {
+        JdbcParamsModel jdbcParamsModel = commonParseSql(sql, o);
         List<T> ts = queryBigDataForList(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects(), elementType);
         return ts;
     }
@@ -184,18 +184,25 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
     /**
      * 查询单个对象
      *
-     * @param sqlid       配置文件对应的组+id
+     * @param sql         对应的sql
      * @param o           默认可以传 Map、Model
      * @param elementType 出参类型指定
      * @param <T>
      * @return
      */
     @Override
-    public <T> T executeQueryObject(String sqlid, Object o, Class<T> elementType) {
-        JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
-        RowMapper<T> rm = BeanPropertyRowMapper.newInstance(elementType);
+    public <T> T executeQueryObject(String sql, Object o, Class<T> elementType) {
+        JdbcParamsModel jdbcParamsModel = commonParseSql(sql, o);
+        RowMapper<T> rm = DefaultRowMapper.newInstance(elementType);
         T ts = queryForObject(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects(), rm);
         return ts;
+    }
+
+    @Override
+    public <T> T executeQueryObject(String sql, Object o, RowMapper<T> rm) {
+        JdbcParamsModel jdbcParamsModel = commonParseSql(sql, o);
+        T result = queryForObject(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects(), rm);
+        return result;
     }
 
     /**
@@ -207,7 +214,7 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
      */
     @Override
     public Map<String, Object> executeQueryMap(String sqlid, Object o) {
-        JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
+        JdbcParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
         Map<String, Object> map = queryForMap(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects());
         return map;
     }
@@ -234,13 +241,14 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
     /**
      * 执行修改操作
      *
-     * @param sqlid 配置文件对应 组和id
-     * @param o     入参对象 Map、Model
+     * @param sql 配置文件对应 组和id
+     * @param o   入参对象 Map、Model
      * @return
      */
     @Override
-    public int executeUpdate(String sqlid, Object o) {
-        JDBCParamsModel jdbcParamsModel = commonParseSql(sqlid, o);
+    public int executeUpdate(String sql, Object o) throws Exception {
+        JdbcParamsModel jdbcParamsModel = commonParseSql(sql, o);
+        checkSQLProcess.checkProcess(SqlCommandType.UPDATE, jdbcParamsModel, o);
         int update = update(jdbcParamsModel.getSql(), jdbcParamsModel.getObjects());
         return update;
     }
@@ -248,14 +256,13 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
     /**
      * 执行添加操作
      *
-     * @param sqlid 配置文件对象 组和id
-     * @param o     入参对象
+     * @param sql sql语句
+     * @param o   入参对象
      * @return
      */
     @Override
-    public int executeInsert(String sqlid, Object o) {
+    public int executeInsert(String sql, Object o) {
         SqlParameterSource sqlParameterSource = getSqlParameterSource(o);
-        String sql = SqlKit.sql(sqlid);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         int update = getNamedParameterJdbcTemplate().update(sql, sqlParameterSource, keyHolder);
         int i = keyHolder.getKey().intValue();
@@ -281,13 +288,14 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
     /**
      * 通用sql处理方式
      *
-     * @param sqlid
+     * @param sql    sql语句
      * @param params
      * @return
      */
-    private JDBCParamsModel commonParseSql(String sqlid, Object params) {
-        String sql = SqlKit.sql(sqlid);
+    private JdbcParamsModel commonParseSql(String sql, Object params) {
+        // 解析参数类型
         SqlParameterSource sqlParameterSource = getSqlParameterSource(params);
+        // 将sql和参数进行绑定
         ParsedSql2 parsedSql = getParsedSql2(sql);
         // 获取有效的参数
         Object[] data = NamedParameterUtils2.buildValueArray(parsedSql, sqlParameterSource, null);
@@ -300,28 +308,11 @@ public class JDBCTemplateSupport extends JdbcTemplate implements IJDBCTemplate {
 
         logger.debug(" 转换后的sql - " + s);
         logger.debug(" 对应参数    -  " + Arrays.toString(data));
-        JDBCParamsModel model = new JDBCParamsModel();
+        JdbcParamsModel model = new JdbcParamsModel();
         model.setSql(s);
         model.setObjects(data);
         return model;
     }
-
-
-//    public Long insertAndGetKey(final String sql, final Object[] object) {
-//        KeyHolder keyHolder = new GeneratedKeyHolder();
-//        update(new PreparedStatementCreator() {
-//            public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
-//                PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-//                for (int i = 0; i < object.length; i++) {
-//                    int index = i + 1;
-//                    ps.setObject(index, object[i]);
-//                }
-//                return ps;
-//            }
-//        }, keyHolder);
-//        Long generatedId = keyHolder.getKey().longValue();
-//        return generatedId;
-//    }
 
     @Override
     public <T> T query(PreparedStatementCreator psc, final PreparedStatementSetter pss, final ResultSetExtractor<T> rse)

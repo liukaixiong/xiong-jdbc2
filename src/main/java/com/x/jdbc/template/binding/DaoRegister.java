@@ -1,7 +1,7 @@
 package com.x.jdbc.template.binding;
 
-import com.x.jdbc.template.IJDBCTemplate;
-import org.apache.ibatis.binding.BindingException;
+import com.x.jdbc.sql.ConfigurableFactory;
+import com.x.jdbc.template.IJdbcTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,13 +21,13 @@ public class DaoRegister<T> {
     // 承装动态代理的容器
     private final Map<Class<?>, DaoProxyFactory> knownMappers = new HashMap();
 
-    public <T> T getDao(Class<T> type, IJDBCTemplate jdbcTemplate) {
-        DaoProxyFactory daoProxyFactory = (DaoProxyFactory) this.knownMappers.get(type);
+    public <T> T getDao(Class<T> type, IJdbcTemplate jdbcTemplate, ConfigurableFactory configurableFactory) {
+        DaoProxyFactory daoProxyFactory = this.knownMappers.get(type);
         if (daoProxyFactory == null) {
             throw new BindingException("Type " + type + " is not known to the MapperRegistry.");
         } else {
             try {
-                return (T) daoProxyFactory.newInstance(jdbcTemplate);
+                return (T) daoProxyFactory.newInstance(jdbcTemplate,configurableFactory);
             } catch (Exception var5) {
                 throw new BindingException("Error getting mapper instance. Cause: " + var5, var5);
             }

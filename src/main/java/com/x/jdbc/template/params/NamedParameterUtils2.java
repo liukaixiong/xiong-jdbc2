@@ -27,7 +27,7 @@ import java.util.*;
 
 /**
  * Helper methods for named parameter parsing.
- * <p>
+ * <p/>
  * <p>Only intended for internal use within Spring's JDBC framework.
  *
  * @author Thomas Risberg
@@ -184,9 +184,10 @@ public abstract class NamedParameterUtils2 {
 
     /**
      * Skip over comments and quoted names present in an SQL statement
+     * 跳过在SQL语句中出现的注释和引用的名称。
      *
-     * @param statement character array containing SQL statement
-     * @param position  current position of statement
+     * @param statement character array containing SQL statement    包含sql的char数组
+     * @param position  current position of statement               位置
      * @return next position to process after any comments or quotes are skipped
      */
     private static int skipCommentsAndQuotes(char[] statement, int position) {
@@ -338,14 +339,6 @@ public abstract class NamedParameterUtils2 {
         return i;
     }
 
-//    private static String replaceDynamicStr(String sql){
-//        int indexNo = sql.indexOf("$");
-//        int kg = sql.indexOf("\r", indexNo);
-//        int hh = sql.indexOf("\n",indexNo);
-//
-//    }
-
-
     public static String replaceDynamic(String sql, SqlParameterSource mapSqlParameterSource) {
         int indexNo = sql.indexOf("$");
         if (indexNo > 0) {
@@ -371,7 +364,7 @@ public abstract class NamedParameterUtils2 {
                 try {
                     value = mapSqlParameterSource.getValue(table.trim());
                 } catch (Exception e) {
-                    System.err.println(" !!!!!!!!动态参数为必填项 : $"+table.trim()+" 必须为它赋值 .!!!!!!!!!!!!!");
+                    System.err.println(" !!!!!!!!动态参数为必填项 : $" + table.trim() + " 必须为它赋值 .!!!!!!!!!!!!!");
                     e.printStackTrace();
                 }
                 sql = sql.replace("$" + table.trim(), value.toString());
@@ -390,8 +383,6 @@ public abstract class NamedParameterUtils2 {
      * @return
      */
     public static String validCheckSql(String sql, String s, ParsedSql2 parsedSql, SqlParameterSource mapSqlParameterSource) {
-
-
         if (parsedSql.getParameterNames().size() > 0) {
             // 如果是update的情况下
             String s1 = parsedSql.getParameterNames().get(0);
@@ -408,12 +399,6 @@ public abstract class NamedParameterUtils2 {
                     s = firstSql + s;
                 }
             }
-//            else { // 如果是查询的情况下
-//                if (sql.trim().startsWith("select")) {
-//                    String firstSql = sql.substring(0, sql.indexOf("where ") - 5);
-//                    s = firstSql + s;
-//                }
-//            }
         }
         return s;
     }

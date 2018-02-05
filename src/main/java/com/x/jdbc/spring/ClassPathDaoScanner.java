@@ -1,9 +1,10 @@
 package com.x.jdbc.spring;
 
-import com.x.jdbc.template.IJDBCTemplate;
-import com.x.jdbc.template.facotry.DaoFactoryBean;
+import com.alibaba.druid.support.logging.Resources;
+import com.x.jdbc.sql.ConfigurableFactory;
+import com.x.jdbc.template.IJdbcTemplate;
 import com.x.jdbc.template.binding.DaoRegister;
-import org.apache.ibatis.io.Resources;
+import com.x.jdbc.template.facotry.DaoFactoryBean;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
@@ -30,12 +31,11 @@ import java.util.Set;
 public class ClassPathDaoScanner extends ClassPathBeanDefinitionScanner {
 
     //具体执行者
-    private IJDBCTemplate jdbcTemplate;
-
+    private IJdbcTemplate jdbcTemplate;
     // 具体的接口
     private Class<?> markerInterface;
-
     private DaoRegister daoRegister;
+    private ConfigurableFactory configurableFactory;
 
 
     public DaoRegister getDaoRegister() {
@@ -43,6 +43,14 @@ public class ClassPathDaoScanner extends ClassPathBeanDefinitionScanner {
             this.daoRegister = new DaoRegister();
         }
         return daoRegister;
+    }
+
+    public ConfigurableFactory getConfigurableFactory() {
+        return configurableFactory;
+    }
+
+    public void setConfigurableFactory(ConfigurableFactory configurableFactory) {
+        this.configurableFactory = configurableFactory;
     }
 
     public void setDaoRegister(DaoRegister daoRegister) {
@@ -61,11 +69,11 @@ public class ClassPathDaoScanner extends ClassPathBeanDefinitionScanner {
         super(registry, useDefaultFilters, environment);
     }
 
-    public IJDBCTemplate getJdbcTemplate() {
+    public IJdbcTemplate getJdbcTemplate() {
         return jdbcTemplate;
     }
 
-    public void setJdbcTemplate(IJDBCTemplate jdbcTemplate) {
+    public void setJdbcTemplate(IJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -117,7 +125,7 @@ public class ClassPathDaoScanner extends ClassPathBeanDefinitionScanner {
                 boolean explicitFactoryUsed = false;
                 definition.getPropertyValues().add("jdbcTemplate", jdbcTemplate);
                 definition.getPropertyValues().add("daoRegister", getDaoRegister());
-
+                definition.getPropertyValues().add("configurableFactory", configurableFactory);
                 explicitFactoryUsed = true;
                 if (!explicitFactoryUsed) {
                     if (logger.isDebugEnabled()) {

@@ -1,7 +1,8 @@
 package com.x.jdbc.template.binding;
 
-import com.x.jdbc.template.IJDBCTemplate;
-import org.apache.ibatis.reflection.ExceptionUtil;
+import com.x.jdbc.sql.ConfigurableFactory;
+import com.x.jdbc.template.IJdbcTemplate;
+import com.x.jdbc.template.common.utils.ExceptionUtil;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
@@ -20,14 +21,16 @@ import java.util.Map;
  **/
 public class DaoProxy<T> implements InvocationHandler, Serializable {
     private static final long serialVersionUID = -6424540398559729838L;
-    private final IJDBCTemplate jdbcTemplate;
+    private final IJdbcTemplate jdbcTemplate;
     private final Class<T> mapperInterface;
     private final Map<Method, DaoMethod> methodCache;
+    private ConfigurableFactory configurableFactory;
 
-    public DaoProxy(IJDBCTemplate jdbcTemplate, Class<T> mapperInterface, Map<Method, DaoMethod> methodCache) {
+    public DaoProxy(IJdbcTemplate jdbcTemplate, Class<T> mapperInterface, Map<Method, DaoMethod> methodCache, ConfigurableFactory configurableFactory) {
         this.jdbcTemplate = jdbcTemplate;
         this.mapperInterface = mapperInterface;
         this.methodCache = methodCache;
+        this.configurableFactory = configurableFactory;
     }
 
     @Override
@@ -40,14 +43,20 @@ public class DaoProxy<T> implements InvocationHandler, Serializable {
             }
         } else {
             DaoMethod mapperMethod = this.cachedMapperMethod(method);
-            return mapperMethod.execute(this.jdbcTemplate, args);
+            return mapperMethod.execute(args);
         }
     }
 
+    /**
+     * 缓存DaoMethod对象
+     *
+     * @param method
+     * @return
+     */
     private DaoMethod cachedMapperMethod(Method method) {
-        DaoMethod daoMethod = (DaoMethod) this.methodCache.get(method);
+        DaoMethod daoMethod = this.methodCache.get(method);
         if (daoMethod == null) {
-            daoMethod = new DaoMethod(this.mapperInterface, method, jdbcTemplate);
+            daoMethod = new DaoMethod(this.mapperInterface, method, jdbcTemplate, configurableFactory);
             this.methodCache.put(method, daoMethod);
         }
         return daoMethod;

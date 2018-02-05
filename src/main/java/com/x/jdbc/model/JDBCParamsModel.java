@@ -7,7 +7,7 @@ package com.x.jdbc.model;
  * @create 2017-03-14 11:24
  * @email liukx@elab-plus.com
  **/
-public class JDBCParamsModel {
+public class JdbcParamsModel {
     // 查询语句
     private String sql;
     // 参数

@@ -1,9 +1,9 @@
-package com.x.jdbc.model;
+package model;
 
-import com.x.jdbc.anno.Column;
-
+import javax.persistence.Column;
 import java.sql.SQLException;
 import java.util.Date;
+
 //implements ColumnMapping
 //@Table(name ="t_test")
 public class TTest1 {

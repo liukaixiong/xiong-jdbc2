@@ -1,5 +1,7 @@
 package com.x.jdbc.sql.config;
 
+import jdk.nashorn.internal.ir.annotations.Ignore;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
@@ -15,4 +17,6 @@ public class SqlItem {
     String id;
     @XmlValue
     String value;
+    @Ignore
+    SqlCommandType sqlCommandType;
 }

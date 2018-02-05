@@ -1,7 +1,8 @@
 package com.x.jdbc.spring;
 
-import com.x.jdbc.template.IJDBCTemplate;
-import com.x.jdbc.template.JDBCTemplateSupport;
+import com.x.jdbc.sql.ConfigurableFactory;
+import com.x.jdbc.template.IJdbcTemplate;
+import com.x.jdbc.template.JdbcTemplateSupport;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -26,16 +27,23 @@ import static org.springframework.util.Assert.notNull;
  **/
 public class DaoScannerConfigurer implements BeanDefinitionRegistryPostProcessor, InitializingBean, ApplicationContextAware {
     //具体执行者
-    private IJDBCTemplate jdbcTemplate;
-
+    private IJdbcTemplate jdbcTemplate;
     // Spring上下文
     private ApplicationContext applicationContext;
-
     // 要扫描的包
     private String basePackage;
-
     //检查父类
     private Class<?> markerInterface;
+
+    private ConfigurableFactory configurableFactory;
+
+    public ConfigurableFactory getConfigurableFactory() {
+        return configurableFactory;
+    }
+
+    public void setConfigurableFactory(ConfigurableFactory configurableFactory) {
+        this.configurableFactory = configurableFactory;
+    }
 
     public Class<?> getMarkerInterface() {
         return markerInterface;
@@ -53,14 +61,14 @@ public class DaoScannerConfigurer implements BeanDefinitionRegistryPostProcessor
         this.basePackage = basePackage;
     }
 
-    public IJDBCTemplate getJdbcTemplate() {
+    public IJdbcTemplate getJdbcTemplate() {
         if (this.jdbcTemplate == null) {
-            this.jdbcTemplate = new JDBCTemplateSupport();
+            this.jdbcTemplate = new JdbcTemplateSupport();
         }
         return jdbcTemplate;
     }
 
-    public void setJdbcTemplate(IJDBCTemplate jdbcTemplate) {
+    public void setJdbcTemplate(IJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -75,6 +83,7 @@ public class DaoScannerConfigurer implements BeanDefinitionRegistryPostProcessor
         scanner.setJdbcTemplate(getJdbcTemplate());
         scanner.setMarkerInterface(this.markerInterface);
         scanner.setResourceLoader(this.applicationContext);
+        scanner.setConfigurableFactory(this.configurableFactory);
         scanner.registerFilters();
         //注册对应的daoInterface
         scanner.scan(StringUtils.tokenizeToStringArray(this.basePackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS));
