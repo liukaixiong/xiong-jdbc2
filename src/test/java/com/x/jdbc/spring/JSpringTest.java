@@ -2,6 +2,7 @@ package com.x.jdbc.spring;
 
 import dao.DaoInterface;
 import model.TTest;
+import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import java.util.List;
 @ContextConfiguration
         ({"classpath:applicationContext-datasource.xml"})
 public class JSpringTest {
+
+    private Logger logger = Logger.getLogger(JSpringTest.class);
 
     @Autowired
     private DaoInterface daoInterface;
@@ -99,7 +102,14 @@ public class JSpringTest {
 //        tTest.setGirlName("我要开始测试啦...");
 //        TTest test1 = tTest.getTest();
 //        List<TTest> testList = tTest.getTestList();
-        System.out.println("==================");
+        try {
+            System.out.println("==================");
+            int i = 1 / 0;
+        } catch (Exception e) {
+            logger.error(e);
+//            Cat.logError("这是一个错误", e);
+        }
+
 //        List list = new ArrayList();
 //        list.add("1");
 //        TTestExample example = new TTestExample();
